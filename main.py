@@ -3,21 +3,19 @@ from flask import Flask, request, jsonify, render_template
 from google import genai
 import PyPDF2
 
-# ==============================
-# CONFIG
-# ==============================
+
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-client = genai.Client(api_key="AIzaSyC7ejpsdTvEgFvjrRJDZGA9AqX2AyFJxbw")
+client = genai.Client(api_key="YOUR API KEY")
 
 
 app = Flask(__name__, static_folder='.', static_url_path='', template_folder='.')
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# ==============================
+
 # PDF PARSING
-# ==============================
+
 def extract_text_from_pdf(pdf_path):
     text = ""
     with open(pdf_path, "rb") as file:
@@ -26,9 +24,9 @@ def extract_text_from_pdf(pdf_path):
             text += page.extract_text() or ""
     return text
 
-# ==============================
+
 # RESUME PARSER (LLM)
-# ==============================
+
 def parse_resume(resume_text):
     prompt = f"""
 You are a resume parser.
@@ -55,9 +53,9 @@ Return in bullet points.
             raise Exception("API quota exceeded. Please try again later or upgrade your API plan.")
         raise e
 
-# ==============================
+
 # JOB DESCRIPTION PARSER
-# ==============================
+
 def parse_job_description(jd_text):
     prompt = f"""
 Extract:
@@ -81,9 +79,8 @@ Return in bullet points.
             raise Exception("API quota exceeded. Please try again later or upgrade your API plan.")
         raise e
 
-# ==============================
 # ATS MATCHING
-# ==============================
+
 def ats_match(parsed_resume, parsed_jd):
     prompt = f"""
 You are an Applicant Tracking System.
@@ -114,16 +111,16 @@ Provide:
             raise Exception("API quota exceeded. Please try again later or upgrade your API plan.")
         raise e
 
-# ==============================
+
 # SERVE FRONTEND
-# ==============================
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# ==============================
+
 # API ROUTE (PDF UPLOAD)
-# ==============================
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     if "resume" not in request.files:
@@ -163,8 +160,6 @@ def analyze():
         print("Error occurred:", error_message)
         return jsonify({"error": error_message}), 503
 
-# ==============================
-# RUN
-# ==============================
+
 if __name__ == "__main__":
     app.run(debug=True, port=8080)
